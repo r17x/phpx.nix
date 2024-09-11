@@ -19,6 +19,7 @@
               DBNAME = "no-xampp";
               DBUSER = username;
               HOSTNAME = "localhost";
+              DBPORT = 5432; # change this if you are already allocate this port
             };
 
             packages = [ ];
@@ -35,7 +36,7 @@
                   DBNAME = config.env.DBNAME;
                   DBUSER = config.env.DBUSER;
                   DBHOST = config.services.postgres.listen_addresses;
-                  DBPORT = toString config.services.postgres.port;
+                  DBPORT = toString config.env.DBPORT;
                 };
                 settings = {
                   "pm" = "dynamic";
@@ -52,6 +53,7 @@
             services.postgres = {
               enable = true;
               package = pkgs.postgresql_15;
+              port = config.env.DBPORT;
               listen_addresses = "127.0.0.1";
               initialDatabases = [ { name = config.env.DBNAME; } ];
             };
