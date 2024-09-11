@@ -9,76 +9,83 @@
       imports = [ inputs.devenv.flakeModule ];
       systems = nixpkgs.lib.systems.flakeExposed;
       perSystem = _args: {
-        devenv.shells.default =
-          { config, pkgs, ... }:
+        devenv.shells.default = { config, pkgs, ... }:
           let
             appName = "web";
+            username = builtins.getEnv "USER";
           in
           {
-            env.DBNAME = "no-xampp";
-            env.DBUSER = "r17";
-            env.HOSTNAME = "localhost";
+            env = {
+              DBNAME = "no-xampp";
+              DBUSER = username;
+              HOSTNAME = "localhost";
+            };
 
             packages = [ ];
 
             # see full options: https://devenv.sh/supported-languages/php/
-            languages.php.enable = true;
-            languages.php.extensions = [
-              "pgsql"
-              # add more extensions here
-            ];
-            languages.php.fpm.pools.${appName} = {
-              phpEnv = {
-                DBNAME = config.env.DBNAME;
-                DBUSER = config.env.DBUSER;
-                DBHOST = config.services.postgres.listen_addresses;
-                DBPORT = toString config.services.postgres.port;
-              };
-              settings = {
-                "pm" = "dynamic";
-                "pm.max_children" = 75;
-                "pm.start_servers" = 10;
-                "pm.min_spare_servers" = 5;
-                "pm.max_spare_servers" = 20;
-                "pm.max_requests" = 500;
+            languages.php = {
+              enable = true;
+              extensions = [
+                "pgsql"
+                # add more extensions here
+              ];
+              fpm.pools.${appName} = {
+                phpEnv = {
+                  DBNAME = config.env.DBNAME;
+                  DBUSER = config.env.DBUSER;
+                  DBHOST = config.services.postgres.listen_addresses;
+                  DBPORT = toString config.services.postgres.port;
+                };
+                settings = {
+                  "pm" = "dynamic";
+                  "pm.max_children" = 75;
+                  "pm.start_servers" = 10;
+                  "pm.min_spare_servers" = 5;
+                  "pm.max_spare_servers" = 20;
+                  "pm.max_requests" = 500;
+                };
               };
             };
 
             # see full options: https://devenv.sh/supported-services/postgres/
-            services.postgres.enable = true;
-            services.postgres.package = pkgs.postgresql_15;
-            services.postgres.listen_addresses = "127.0.0.1";
-            services.postgres.initialDatabases = [ { name = config.env.DBNAME; } ];
+            services.postgres = {
+              enable = true;
+              package = pkgs.postgresql_15;
+              listen_addresses = "127.0.0.1";
+              initialDatabases = [ { name = config.env.DBNAME; } ];
+            };
 
-            services.nginx.enable = true;
-            services.nginx.httpConfig = # nginx
-              ''
+            services.nginx = {
+              enable = true;
+              httpConfig = # nginx
+                ''
                 server {
-                         listen 80;
-                         server_name ${config.env.HOSTNAME};
-                         
-                         root         ${config.env.DEVENV_ROOT}/src/;
+                  listen 80;
+                  server_name ${config.env.HOSTNAME};
+                  
+                  root         ${config.env.DEVENV_ROOT}/src/;
 
-                         index index.html index.htm index.php;
+                  index index.html index.htm index.php;
 
-                         location / {
-                                      try_files $uri $uri/ /index.php$is_args$args;
-                         }
+                  location / {
+                              try_files $uri $uri/ /index.php$is_args$args;
+                  }
 
-                         location ~ \.php$ {
-                            fastcgi_split_path_info ^(.+\.php)(/.+)$;
-                            fastcgi_pass unix:${config.languages.php.fpm.pools.${appName}.socket};
-                            fastcgi_index index.php;
-                            include ${config.services.nginx.package}/conf/fastcgi.conf;
+                  location ~ \.php$ {
+                    fastcgi_split_path_info ^(.+\.php)(/.+)$;
+                    fastcgi_pass unix:${config.languages.php.fpm.pools.${appName}.socket};
+                    fastcgi_index index.php;
+                    include ${config.services.nginx.package}/conf/fastcgi.conf;
                     }
                 }
-              '';
+                '';
+            };
 
             scripts.up.exec = # bash
               ''
                 devenv up
               '';
-
           };
       };
     };
