@@ -1,3 +1,4 @@
+
 # PNPN - PHP Nginx PostgreSQL Nix ❄️🐘
 
 ## 🚀 Quick Start
@@ -5,7 +6,7 @@
 **3 Steps** to run this Elephant Project:
 
 1. Change directory to the project root
-2. Run command `nix develop --impore -c up`
+2. Run command `nix develop --impure -c up`
 3. Open your browser and go to `http://localhost`
 
 > [!NOTE]
@@ -14,8 +15,9 @@
 
 ### Install Nix
 
-```bash
+```sh
 curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
 ```
 
 Happy Hacking
+
